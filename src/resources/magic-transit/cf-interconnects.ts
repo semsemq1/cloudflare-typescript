@@ -147,6 +147,12 @@ export namespace CfInterconnectUpdateResponse {
     id?: string;
 
     /**
+     * True if automatic stateful return routing should be enabled for a tunnel, false
+     * otherwise.
+     */
+    automatic_return_routing?: boolean;
+
+    /**
      * The name of the interconnect. The name cannot share a name with other tunnels.
      */
     colo_name?: string;
@@ -174,6 +180,14 @@ export namespace CfInterconnectUpdateResponse {
      * 10.0.0.0–10.255.255.255, 172.16.0.0–172.31.255.255, 192.168.0.0–192.168.255.255.
      */
     interface_address?: string;
+
+    /**
+     * A 127 bit IPV6 prefix from within the virtual_subnet6 prefix space with the
+     * address being the first IP of the subnet and not same as the address of
+     * virtual_subnet6. Eg if virtual_subnet6 is 2606:54c1:7:0:a9fe:12d2::/127 ,
+     * interface_address6 could be 2606:54c1:7:0:a9fe:12d2:1:200/127
+     */
+    interface_address6?: string;
 
     /**
      * The date and time the tunnel was last modified.
@@ -218,6 +232,12 @@ export namespace CfInterconnectListResponse {
     id?: string;
 
     /**
+     * True if automatic stateful return routing should be enabled for a tunnel, false
+     * otherwise.
+     */
+    automatic_return_routing?: boolean;
+
+    /**
      * The name of the interconnect. The name cannot share a name with other tunnels.
      */
     colo_name?: string;
@@ -245,6 +265,14 @@ export namespace CfInterconnectListResponse {
      * 10.0.0.0–10.255.255.255, 172.16.0.0–172.31.255.255, 192.168.0.0–192.168.255.255.
      */
     interface_address?: string;
+
+    /**
+     * A 127 bit IPV6 prefix from within the virtual_subnet6 prefix space with the
+     * address being the first IP of the subnet and not same as the address of
+     * virtual_subnet6. Eg if virtual_subnet6 is 2606:54c1:7:0:a9fe:12d2::/127 ,
+     * interface_address6 could be 2606:54c1:7:0:a9fe:12d2:1:200/127
+     */
+    interface_address6?: string;
 
     /**
      * The date and time the tunnel was last modified.
@@ -291,6 +319,12 @@ export namespace CfInterconnectBulkUpdateResponse {
     id?: string;
 
     /**
+     * True if automatic stateful return routing should be enabled for a tunnel, false
+     * otherwise.
+     */
+    automatic_return_routing?: boolean;
+
+    /**
      * The name of the interconnect. The name cannot share a name with other tunnels.
      */
     colo_name?: string;
@@ -318,6 +352,14 @@ export namespace CfInterconnectBulkUpdateResponse {
      * 10.0.0.0–10.255.255.255, 172.16.0.0–172.31.255.255, 192.168.0.0–192.168.255.255.
      */
     interface_address?: string;
+
+    /**
+     * A 127 bit IPV6 prefix from within the virtual_subnet6 prefix space with the
+     * address being the first IP of the subnet and not same as the address of
+     * virtual_subnet6. Eg if virtual_subnet6 is 2606:54c1:7:0:a9fe:12d2::/127 ,
+     * interface_address6 could be 2606:54c1:7:0:a9fe:12d2:1:200/127
+     */
+    interface_address6?: string;
 
     /**
      * The date and time the tunnel was last modified.
@@ -362,6 +404,12 @@ export namespace CfInterconnectGetResponse {
     id?: string;
 
     /**
+     * True if automatic stateful return routing should be enabled for a tunnel, false
+     * otherwise.
+     */
+    automatic_return_routing?: boolean;
+
+    /**
      * The name of the interconnect. The name cannot share a name with other tunnels.
      */
     colo_name?: string;
@@ -389,6 +437,14 @@ export namespace CfInterconnectGetResponse {
      * 10.0.0.0–10.255.255.255, 172.16.0.0–172.31.255.255, 192.168.0.0–192.168.255.255.
      */
     interface_address?: string;
+
+    /**
+     * A 127 bit IPV6 prefix from within the virtual_subnet6 prefix space with the
+     * address being the first IP of the subnet and not same as the address of
+     * virtual_subnet6. Eg if virtual_subnet6 is 2606:54c1:7:0:a9fe:12d2::/127 ,
+     * interface_address6 could be 2606:54c1:7:0:a9fe:12d2:1:200/127
+     */
+    interface_address6?: string;
 
     /**
      * The date and time the tunnel was last modified.
@@ -428,6 +484,12 @@ export interface CfInterconnectUpdateParams {
   account_id: string;
 
   /**
+   * Body param: True if automatic stateful return routing should be enabled for a
+   * tunnel, false otherwise.
+   */
+  automatic_return_routing?: boolean;
+
+  /**
    * Body param: An optional description of the interconnect.
    */
   description?: string;
@@ -448,6 +510,14 @@ export interface CfInterconnectUpdateParams {
    * 10.0.0.0–10.255.255.255, 172.16.0.0–172.31.255.255, 192.168.0.0–192.168.255.255.
    */
   interface_address?: string;
+
+  /**
+   * Body param: A 127 bit IPV6 prefix from within the virtual_subnet6 prefix space
+   * with the address being the first IP of the subnet and not same as the address of
+   * virtual_subnet6. Eg if virtual_subnet6 is 2606:54c1:7:0:a9fe:12d2::/127 ,
+   * interface_address6 could be 2606:54c1:7:0:a9fe:12d2:1:200/127
+   */
+  interface_address6?: string;
 
   /**
    * Body param: The Maximum Transmission Unit (MTU) in bytes for the interconnect.

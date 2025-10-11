@@ -2,7 +2,7 @@
 
 import { APIResource } from '../../../resource';
 import * as Core from '../../../core';
-import { SinglePage } from '../../../pagination';
+import { V4PagePaginationArray, type V4PagePaginationArrayParams } from '../../../pagination';
 
 export class CustomPages extends APIResource {
   /**
@@ -81,12 +81,12 @@ export class CustomPages extends APIResource {
   list(
     params: CustomPageListParams,
     options?: Core.RequestOptions,
-  ): Core.PagePromise<CustomPageWithoutHTMLsSinglePage, CustomPageWithoutHTML> {
-    const { account_id } = params;
+  ): Core.PagePromise<CustomPageWithoutHTMLsV4PagePaginationArray, CustomPageWithoutHTML> {
+    const { account_id, ...query } = params;
     return this._client.getAPIList(
       `/accounts/${account_id}/access/custom_pages`,
-      CustomPageWithoutHTMLsSinglePage,
-      options,
+      CustomPageWithoutHTMLsV4PagePaginationArray,
+      { query, ...options },
     );
   }
 
@@ -143,7 +143,7 @@ export class CustomPages extends APIResource {
   }
 }
 
-export class CustomPageWithoutHTMLsSinglePage extends SinglePage<CustomPageWithoutHTML> {}
+export class CustomPageWithoutHTMLsV4PagePaginationArray extends V4PagePaginationArray<CustomPageWithoutHTML> {}
 
 export interface CustomPage {
   /**
@@ -162,18 +162,9 @@ export interface CustomPage {
   type: 'identity_denied' | 'forbidden';
 
   /**
-   * Number of apps the custom page is assigned to.
-   */
-  app_count?: number;
-
-  created_at?: string;
-
-  /**
    * UUID.
    */
   uid?: string;
-
-  updated_at?: string;
 }
 
 export interface CustomPageWithoutHTML {
@@ -188,18 +179,9 @@ export interface CustomPageWithoutHTML {
   type: 'identity_denied' | 'forbidden';
 
   /**
-   * Number of apps the custom page is assigned to.
-   */
-  app_count?: number;
-
-  created_at?: string;
-
-  /**
    * UUID.
    */
   uid?: string;
-
-  updated_at?: string;
 }
 
 export interface CustomPageDeleteResponse {
@@ -229,11 +211,6 @@ export interface CustomPageCreateParams {
    * Body param: Custom page type.
    */
   type: 'identity_denied' | 'forbidden';
-
-  /**
-   * Body param: Number of apps the custom page is assigned to.
-   */
-  app_count?: number;
 }
 
 export interface CustomPageUpdateParams {
@@ -256,16 +233,11 @@ export interface CustomPageUpdateParams {
    * Body param: Custom page type.
    */
   type: 'identity_denied' | 'forbidden';
-
-  /**
-   * Body param: Number of apps the custom page is assigned to.
-   */
-  app_count?: number;
 }
 
-export interface CustomPageListParams {
+export interface CustomPageListParams extends V4PagePaginationArrayParams {
   /**
-   * Identifier.
+   * Path param: Identifier.
    */
   account_id: string;
 }
@@ -284,14 +256,14 @@ export interface CustomPageGetParams {
   account_id: string;
 }
 
-CustomPages.CustomPageWithoutHTMLsSinglePage = CustomPageWithoutHTMLsSinglePage;
+CustomPages.CustomPageWithoutHTMLsV4PagePaginationArray = CustomPageWithoutHTMLsV4PagePaginationArray;
 
 export declare namespace CustomPages {
   export {
     type CustomPage as CustomPage,
     type CustomPageWithoutHTML as CustomPageWithoutHTML,
     type CustomPageDeleteResponse as CustomPageDeleteResponse,
-    CustomPageWithoutHTMLsSinglePage as CustomPageWithoutHTMLsSinglePage,
+    CustomPageWithoutHTMLsV4PagePaginationArray as CustomPageWithoutHTMLsV4PagePaginationArray,
     type CustomPageCreateParams as CustomPageCreateParams,
     type CustomPageUpdateParams as CustomPageUpdateParams,
     type CustomPageListParams as CustomPageListParams,

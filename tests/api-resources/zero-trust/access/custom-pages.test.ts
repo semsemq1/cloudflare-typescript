@@ -32,7 +32,6 @@ describe('resource customPages', () => {
       custom_html: '<html><body><h1>Access Denied</h1></body></html>',
       name: 'name',
       type: 'identity_denied',
-      app_count: 0,
     });
   });
 
@@ -63,7 +62,6 @@ describe('resource customPages', () => {
         custom_html: '<html><body><h1>Access Denied</h1></body></html>',
         name: 'name',
         type: 'identity_denied',
-        app_count: 0,
       },
     );
   });
@@ -84,6 +82,8 @@ describe('resource customPages', () => {
   test('list: required and optional params', async () => {
     const response = await client.zeroTrust.access.customPages.list({
       account_id: '023e105f4ecef8ad9ca31a8372d0c353',
+      page: 0,
+      per_page: 0,
     });
   });
 

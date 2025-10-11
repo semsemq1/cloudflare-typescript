@@ -42,6 +42,7 @@ TEST_PATHS=(
 	tests/api-resources/load-balancers/monitors/monitors.test.ts
 	tests/api-resources/load-balancers/monitors/previews.test.ts
 	tests/api-resources/load-balancers/monitors/references.test.ts
+	tests/api-resources/load-balancers/monitor-groups.test.ts
 	tests/api-resources/load-balancers/pools/pools.test.ts
 	tests/api-resources/load-balancers/pools/health.test.ts
 	tests/api-resources/load-balancers/pools/references.test.ts
@@ -169,6 +170,9 @@ TEST_PATHS=(
 	tests/api-resources/web3/hostnames/ipfs-universal-paths/content-lists/content-lists.test.ts
 	tests/api-resources/web3/hostnames/ipfs-universal-paths/content-lists/entries.test.ts
 	tests/api-resources/workers/workers.test.ts
+	tests/api-resources/workers/beta/beta.test.ts
+	tests/api-resources/workers/beta/workers/workers.test.ts
+	tests/api-resources/workers/beta/workers/versions.test.ts
 	tests/api-resources/workers/routes.test.ts
 	tests/api-resources/workers/assets/assets.test.ts
 	tests/api-resources/workers/assets/upload.test.ts
@@ -198,9 +202,10 @@ TEST_PATHS=(
 	tests/api-resources/durable-objects/namespaces/namespaces.test.ts
 	tests/api-resources/durable-objects/namespaces/objects.test.ts
 	tests/api-resources/queues/queues.test.ts
-	tests/api-resources/queues/consumers.test.ts
 	tests/api-resources/queues/messages.test.ts
 	tests/api-resources/queues/purge.test.ts
+	tests/api-resources/queues/consumers.test.ts
+	tests/api-resources/queues/subscriptions.test.ts
 	tests/api-resources/api-gateway/api-gateway.test.ts
 	tests/api-resources/api-gateway/configurations.test.ts
 	tests/api-resources/api-gateway/discovery/discovery.test.ts
@@ -253,8 +258,13 @@ TEST_PATHS=(
 	tests/api-resources/billing/billing.test.ts
 	tests/api-resources/billing/profiles.test.ts
 	tests/api-resources/brand-protection/brand-protection.test.ts
+	tests/api-resources/brand-protection/queries.test.ts
+	tests/api-resources/brand-protection/matches.test.ts
+	tests/api-resources/brand-protection/logos.test.ts
+	tests/api-resources/brand-protection/logo-matches.test.ts
 	tests/api-resources/diagnostics/diagnostics.test.ts
 	tests/api-resources/diagnostics/traceroutes.test.ts
+	tests/api-resources/diagnostics/endpoint-healthchecks.test.ts
 	tests/api-resources/images/images.test.ts
 	tests/api-resources/images/v1/v1.test.ts
 	tests/api-resources/images/v1/keys.test.ts
@@ -277,7 +287,6 @@ TEST_PATHS=(
 	tests/api-resources/intel/indicator-feeds/indicator-feeds.test.ts
 	tests/api-resources/intel/indicator-feeds/snapshots.test.ts
 	tests/api-resources/intel/indicator-feeds/permissions.test.ts
-	tests/api-resources/intel/indicator-feeds/downloads.test.ts
 	tests/api-resources/intel/sinkholes.test.ts
 	tests/api-resources/intel/attack-surface-report/attack-surface-report.test.ts
 	tests/api-resources/intel/attack-surface-report/issue-types.test.ts
@@ -512,6 +521,7 @@ TEST_PATHS=(
 	tests/api-resources/zero-trust/networks/virtual-networks.test.ts
 	tests/api-resources/zero-trust/networks/subnets/subnets.test.ts
 	tests/api-resources/zero-trust/networks/subnets/cloudflare-source.test.ts
+	tests/api-resources/zero-trust/networks/hostname-routes.test.ts
 	tests/api-resources/zero-trust/risk-scoring/risk-scoring.test.ts
 	tests/api-resources/zero-trust/risk-scoring/behaviours.test.ts
 	tests/api-resources/zero-trust/risk-scoring/summary.test.ts
@@ -540,6 +550,9 @@ TEST_PATHS=(
 	tests/api-resources/radar/ai/bots/bots.test.ts
 	tests/api-resources/radar/ai/bots/summary.test.ts
 	tests/api-resources/radar/ai/timeseries-groups.test.ts
+	tests/api-resources/radar/ct/ct.test.ts
+	tests/api-resources/radar/ct/authorities.test.ts
+	tests/api-resources/radar/ct/logs.test.ts
 	tests/api-resources/radar/annotations/annotations.test.ts
 	tests/api-resources/radar/annotations/outages.test.ts
 	tests/api-resources/radar/bgp/bgp.test.ts
@@ -661,6 +674,7 @@ TEST_PATHS=(
 	tests/api-resources/cloudforce-one/scans/scans.test.ts
 	tests/api-resources/cloudforce-one/scans/results.test.ts
 	tests/api-resources/cloudforce-one/scans/config.test.ts
+	tests/api-resources/cloudforce-one/binary-storage.test.ts
 	tests/api-resources/cloudforce-one/requests/requests.test.ts
 	tests/api-resources/cloudforce-one/requests/message.test.ts
 	tests/api-resources/cloudforce-one/requests/priority.test.ts
@@ -669,16 +683,13 @@ TEST_PATHS=(
 	tests/api-resources/cloudforce-one/threat-events/attackers.test.ts
 	tests/api-resources/cloudforce-one/threat-events/categories.test.ts
 	tests/api-resources/cloudforce-one/threat-events/countries.test.ts
-	tests/api-resources/cloudforce-one/threat-events/crons.test.ts
 	tests/api-resources/cloudforce-one/threat-events/datasets/datasets.test.ts
-	tests/api-resources/cloudforce-one/threat-events/datasets/health.test.ts
 	tests/api-resources/cloudforce-one/threat-events/indicator-types.test.ts
 	tests/api-resources/cloudforce-one/threat-events/raw.test.ts
 	tests/api-resources/cloudforce-one/threat-events/relate.test.ts
 	tests/api-resources/cloudforce-one/threat-events/tags.test.ts
 	tests/api-resources/cloudforce-one/threat-events/event-tags.test.ts
 	tests/api-resources/cloudforce-one/threat-events/target-industries.test.ts
-	tests/api-resources/cloudforce-one/threat-events/insights.test.ts
 	tests/api-resources/ai-gateway/ai-gateway.test.ts
 	tests/api-resources/ai-gateway/evaluation-types.test.ts
 	tests/api-resources/ai-gateway/logs.test.ts
@@ -719,6 +730,7 @@ TEST_PATHS=(
 	tests/api-resources/ai/tasks.test.ts
 	tests/api-resources/ai/models/models.test.ts
 	tests/api-resources/ai/models/schema.test.ts
+	tests/api-resources/ai/to-markdown.test.ts
 	tests/api-resources/security-center/security-center.test.ts
 	tests/api-resources/security-center/insights/insights.test.ts
 	tests/api-resources/security-center/insights/class.test.ts

@@ -336,6 +336,11 @@ export interface InstanceListParams extends V4PagePaginationArrayParams {
   account_id: string;
 
   /**
+   * Query param: `page` and `cursor` are mutually exclusive, use one or the other.
+   */
+  cursor?: string;
+
+  /**
    * Query param: Accepts ISO 8601 with no timezone offsets and in UTC.
    */
   date_end?: string;
@@ -344,6 +349,12 @@ export interface InstanceListParams extends V4PagePaginationArrayParams {
    * Query param: Accepts ISO 8601 with no timezone offsets and in UTC.
    */
   date_start?: string;
+
+  /**
+   * Query param: should only be used when `cursor` is used, defines a new direction
+   * for the cursor
+   */
+  direction?: 'asc' | 'desc';
 
   /**
    * Query param:

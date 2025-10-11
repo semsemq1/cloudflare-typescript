@@ -41,9 +41,15 @@ import {
   RecordImportResponse,
   RecordListParams,
   RecordResponse,
+  RecordResponsesSinglePage,
   RecordResponsesV4PagePaginationArray,
+  RecordScanListParams,
   RecordScanParams,
   RecordScanResponse,
+  RecordScanReviewParams,
+  RecordScanReviewResponse,
+  RecordScanTriggerParams,
+  RecordScanTriggerResponse,
   RecordTags,
   RecordUpdateParams,
   Records,
@@ -59,7 +65,7 @@ import {
 import * as AnalyticsAPI from './analytics/analytics';
 import { Analytics } from './analytics/analytics';
 import * as SettingsAPI from './settings/settings';
-import { DNSSetting, Settings } from './settings/settings';
+import { Settings } from './settings/settings';
 import * as ZoneTransfersAPI from './zone-transfers/zone-transfers';
 import { ZoneTransfers } from './zone-transfers/zone-transfers';
 
@@ -71,77 +77,15 @@ export class DNS extends APIResource {
   zoneTransfers: ZoneTransfersAPI.ZoneTransfers = new ZoneTransfersAPI.ZoneTransfers(this._client);
 }
 
-/**
- * Nominal metric values, broken down by time interval.
- */
-export type DNSAnalyticsNominalMetric = Array<unknown>;
-
-export interface DNSAnalyticsQuery {
-  /**
-   * Array of dimension names.
-   */
-  dimensions: Array<string>;
-
-  /**
-   * Limit number of returned metrics.
-   */
-  limit: number;
-
-  /**
-   * Array of metric names.
-   */
-  metrics: Array<string>;
-
-  /**
-   * Start date and time of requesting data period in ISO 8601 format.
-   */
-  since: string;
-
-  /**
-   * Unit of time to group data by.
-   */
-  time_delta:
-    | 'all'
-    | 'auto'
-    | 'year'
-    | 'quarter'
-    | 'month'
-    | 'week'
-    | 'day'
-    | 'hour'
-    | 'dekaminute'
-    | 'minute';
-
-  /**
-   * End date and time of requesting data period in ISO 8601 format.
-   */
-  until: string;
-
-  /**
-   * Segmentation filter in 'attribute operator value' format.
-   */
-  filters?: string;
-
-  /**
-   * Array of dimensions to sort by, where each dimension may be prefixed by -
-   * (descending) or + (ascending).
-   */
-  sort?: Array<string>;
-}
-
 DNS.DNSSECResource = DNSSECResource;
 DNS.Records = Records;
 DNS.RecordResponsesV4PagePaginationArray = RecordResponsesV4PagePaginationArray;
+DNS.RecordResponsesSinglePage = RecordResponsesSinglePage;
 DNS.Settings = Settings;
 DNS.Analytics = Analytics;
 DNS.ZoneTransfers = ZoneTransfers;
 
 export declare namespace DNS {
-  export {
-    type DNSAnalyticsNominalMetric as DNSAnalyticsNominalMetric,
-    type DNSAnalyticsQuery as DNSAnalyticsQuery,
-  };
-
   export {
     DNSSECResource as DNSSECResource,
     type DNSSEC as DNSSEC,
@@ -184,7 +128,10 @@ export declare namespace DNS {
     type RecordExportResponse as RecordExportResponse,
     type RecordImportResponse as RecordImportResponse,
     type RecordScanResponse as RecordScanResponse,
+    type RecordScanReviewResponse as RecordScanReviewResponse,
+    type RecordScanTriggerResponse as RecordScanTriggerResponse,
     RecordResponsesV4PagePaginationArray as RecordResponsesV4PagePaginationArray,
+    RecordResponsesSinglePage as RecordResponsesSinglePage,
     type RecordCreateParams as RecordCreateParams,
     type RecordUpdateParams as RecordUpdateParams,
     type RecordListParams as RecordListParams,
@@ -195,9 +142,12 @@ export declare namespace DNS {
     type RecordGetParams as RecordGetParams,
     type RecordImportParams as RecordImportParams,
     type RecordScanParams as RecordScanParams,
+    type RecordScanListParams as RecordScanListParams,
+    type RecordScanReviewParams as RecordScanReviewParams,
+    type RecordScanTriggerParams as RecordScanTriggerParams,
   };
 
-  export { Settings as Settings, type DNSSetting as DNSSetting };
+  export { Settings as Settings };
 
   export { Analytics as Analytics };
 

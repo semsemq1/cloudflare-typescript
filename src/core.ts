@@ -234,7 +234,7 @@ export abstract class APIClient {
   /**
    * Override this to add your own headers validation:
    */
-  protected validateHeaders(headers: Headers, customHeaders: Headers) {}
+  protected validateHeaders(headers: Headers, customHeaders: Headers, usingCustomFetch: boolean) {}
 
   protected defaultIdempotencyKey(): string {
     return `stainless-node-retry-${uuid4()}`;
@@ -397,7 +397,7 @@ export abstract class APIClient {
       reqHeaders['x-stainless-timeout'] = String(options.timeout);
     }
 
-    this.validateHeaders(reqHeaders, headers);
+    this.validateHeaders(reqHeaders, headers, this.fetch !== fetch);
 
     return reqHeaders;
   }
@@ -1100,21 +1100,21 @@ export const coerceBoolean = (value: unknown): boolean => {
 };
 
 export const maybeCoerceInteger = (value: unknown): number | undefined => {
-  if (value === undefined) {
+  if (value == null) {
     return undefined;
   }
   return coerceInteger(value);
 };
 
 export const maybeCoerceFloat = (value: unknown): number | undefined => {
-  if (value === undefined) {
+  if (value == null) {
     return undefined;
   }
   return coerceFloat(value);
 };
 
 export const maybeCoerceBoolean = (value: unknown): boolean | undefined => {
-  if (value === undefined) {
+  if (value == null) {
     return undefined;
   }
   return coerceBoolean(value);

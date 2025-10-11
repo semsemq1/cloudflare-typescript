@@ -10,7 +10,8 @@ const client = new Cloudflare({
 });
 
 describe('resource scriptAndVersionSettings', () => {
-  test('edit: only required params', async () => {
+  // 422 Unprocessable Entity: needs schema update which is merged but not published
+  test.skip('edit: only required params', async () => {
     const responsePromise = client.workers.scripts.scriptAndVersionSettings.edit('this-is_my_script-01', {
       account_id: '023e105f4ecef8ad9ca31a8372d0c353',
     });
@@ -23,7 +24,8 @@ describe('resource scriptAndVersionSettings', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  test('edit: required and optional params', async () => {
+  // 422 Unprocessable Entity: needs schema update which is merged but not published
+  test.skip('edit: required and optional params', async () => {
     const response = await client.workers.scripts.scriptAndVersionSettings.edit('this-is_my_script-01', {
       account_id: '023e105f4ecef8ad9ca31a8372d0c353',
       settings: {
@@ -44,10 +46,16 @@ describe('resource scriptAndVersionSettings', () => {
         observability: {
           enabled: true,
           head_sampling_rate: 0.1,
-          logs: { enabled: true, invocation_logs: true, head_sampling_rate: 0.1 },
+          logs: {
+            enabled: true,
+            invocation_logs: true,
+            destinations: ['cloudflare'],
+            head_sampling_rate: 0.1,
+            persist: true,
+          },
         },
         placement: { mode: 'smart' },
-        tags: ['my-tag'],
+        tags: ['my-team', 'my-public-api'],
         tail_consumers: [
           { service: 'my-log-consumer', environment: 'production', namespace: 'my-namespace' },
         ],

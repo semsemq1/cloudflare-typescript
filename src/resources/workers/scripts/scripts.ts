@@ -9,9 +9,11 @@ import * as DeploymentsAPI from './deployments';
 import {
   Deployment,
   DeploymentCreateParams,
-  DeploymentCreateResponse,
+  DeploymentDeleteParams,
+  DeploymentDeleteResponse,
   DeploymentGetParams,
-  DeploymentGetResponse,
+  DeploymentListParams,
+  DeploymentListResponse,
   Deployments,
 } from './deployments';
 import * as SchedulesAPI from './schedules';
@@ -115,12 +117,12 @@ export class Scripts extends APIResource {
     params: ScriptUpdateParams,
     options?: Core.RequestOptions,
   ): Core.APIPromise<ScriptUpdateResponse> {
-    const { account_id, files, ...body } = params;
+    const { account_id, ...body } = params;
     return (
       this._client.put(
         `/accounts/${account_id}/workers/scripts/${scriptName}`,
         Core.maybeMultipartFormRequestOptions({
-          body: { ...body, ...files },
+          body,
           ...options,
           __multipartSyntax: 'json',
           headers: { 'Content-Type': 'application/javascript', ...options?.headers },
@@ -143,8 +145,11 @@ export class Scripts extends APIResource {
    * ```
    */
   list(params: ScriptListParams, options?: Core.RequestOptions): Core.PagePromise<ScriptsSinglePage, Script> {
-    const { account_id } = params;
-    return this._client.getAPIList(`/accounts/${account_id}/workers/scripts`, ScriptsSinglePage, options);
+    const { account_id, ...query } = params;
+    return this._client.getAPIList(`/accounts/${account_id}/workers/scripts`, ScriptsSinglePage, {
+      query,
+      ...options,
+    });
   }
 
   /**
@@ -191,6 +196,26 @@ export class Scripts extends APIResource {
       headers: { Accept: 'application/javascript', ...options?.headers },
     });
   }
+
+  /**
+   * Search for Workers in an account.
+   *
+   * @example
+   * ```ts
+   * const response = await client.workers.scripts.search({
+   *   account_id: '023e105f4ecef8ad9ca31a8372d0c353',
+   * });
+   * ```
+   */
+  search(params: ScriptSearchParams, options?: Core.RequestOptions): Core.APIPromise<ScriptSearchResponse> {
+    const { account_id, ...query } = params;
+    return (
+      this._client.get(`/accounts/${account_id}/workers/scripts-search`, {
+        query,
+        ...options,
+      }) as Core.APIPromise<{ result: ScriptSearchResponse }>
+    )._thenUnwrap((obj) => obj.result);
+  }
 }
 
 export class ScriptsSinglePage extends SinglePage<Script> {}
@@ -200,6 +225,19 @@ export interface Script {
    * The id of the script in the Workers system. Usually the script name.
    */
   id?: string;
+
+  /**
+   * Date indicating targeted support in the Workers runtime. Backwards incompatible
+   * fixes to the runtime following this date will not affect this Worker.
+   */
+  compatibility_date?: string;
+
+  /**
+   * Flags that enable or disable certain features in the Workers runtime. Used to
+   * enable upcoming features or opt in or out of specific changes not included in a
+   * `compatibility_date`.
+   */
+  compatibility_flags?: Array<string>;
 
   /**
    * When the script was created.
@@ -212,6 +250,11 @@ export interface Script {
   etag?: string;
 
   /**
+   * The names of handlers exported as part of the default export.
+   */
+  handlers?: Array<string>;
+
+  /**
    * Whether a Worker contains assets.
    */
   has_assets?: boolean;
@@ -222,14 +265,31 @@ export interface Script {
   has_modules?: boolean;
 
   /**
+   * The client most recently used to deploy this Worker.
+   */
+  last_deployed_from?: string;
+
+  /**
    * Whether Logpush is turned on for the Worker.
    */
   logpush?: boolean;
 
   /**
+   * The tag of the Durable Object migration that was most recently applied for this
+   * Worker.
+   */
+  migration_tag?: string;
+
+  /**
    * When the script was last modified.
    */
   modified_on?: string;
+
+  /**
+   * Named exports, such as Durable Object class implementations and named
+   * entrypoints.
+   */
+  named_handlers?: Array<Script.NamedHandler>;
 
   /**
    * Configuration for
@@ -257,10 +317,22 @@ export interface Script {
   /**
    * Usage model for the Worker invocations.
    */
-  usage_model?: 'standard';
+  usage_model?: 'standard' | 'bundled' | 'unbound';
 }
 
 export namespace Script {
+  export interface NamedHandler {
+    /**
+     * The names of handlers exported as part of the named export.
+     */
+    handlers?: Array<string>;
+
+    /**
+     * The name of the export.
+     */
+    name?: string;
+  }
+
   /**
    * Configuration for
    * [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
@@ -296,6 +368,11 @@ export interface ScriptSetting {
    * Observability settings for the Worker.
    */
   observability?: ScriptSetting.Observability | null;
+
+  /**
+   * Tags associated with the Worker.
+   */
+  tags?: Array<string>;
 
   /**
    * List of Workers that will consume logs from the attached Worker.
@@ -343,9 +420,19 @@ export namespace ScriptSetting {
       invocation_logs: boolean;
 
       /**
+       * A list of destinations where logs will be exported to.
+       */
+      destinations?: Array<string>;
+
+      /**
        * The sampling rate for logs. From 0 to 1 (1 = 100%, 0.1 = 10%). Default is 1.
        */
       head_sampling_rate?: number | null;
+
+      /**
+       * Whether log persistence is enabled for the Worker.
+       */
+      persist?: boolean;
     }
   }
 }
@@ -359,6 +446,19 @@ export interface ScriptUpdateResponse {
   id?: string;
 
   /**
+   * Date indicating targeted support in the Workers runtime. Backwards incompatible
+   * fixes to the runtime following this date will not affect this Worker.
+   */
+  compatibility_date?: string;
+
+  /**
+   * Flags that enable or disable certain features in the Workers runtime. Used to
+   * enable upcoming features or opt in or out of specific changes not included in a
+   * `compatibility_date`.
+   */
+  compatibility_flags?: Array<string>;
+
+  /**
    * When the script was created.
    */
   created_on?: string;
@@ -367,6 +467,11 @@ export interface ScriptUpdateResponse {
    * Hashed script content, can be used in a If-None-Match header when updating.
    */
   etag?: string;
+
+  /**
+   * The names of handlers exported as part of the default export.
+   */
+  handlers?: Array<string>;
 
   /**
    * Whether a Worker contains assets.
@@ -379,14 +484,31 @@ export interface ScriptUpdateResponse {
   has_modules?: boolean;
 
   /**
+   * The client most recently used to deploy this Worker.
+   */
+  last_deployed_from?: string;
+
+  /**
    * Whether Logpush is turned on for the Worker.
    */
   logpush?: boolean;
 
   /**
+   * The tag of the Durable Object migration that was most recently applied for this
+   * Worker.
+   */
+  migration_tag?: string;
+
+  /**
    * When the script was last modified.
    */
   modified_on?: string;
+
+  /**
+   * Named exports, such as Durable Object class implementations and named
+   * entrypoints.
+   */
+  named_handlers?: Array<ScriptUpdateResponse.NamedHandler>;
 
   /**
    * Configuration for
@@ -412,10 +534,22 @@ export interface ScriptUpdateResponse {
   /**
    * Usage model for the Worker invocations.
    */
-  usage_model?: 'standard';
+  usage_model?: 'standard' | 'bundled' | 'unbound';
 }
 
 export namespace ScriptUpdateResponse {
+  export interface NamedHandler {
+    /**
+     * The names of handlers exported as part of the named export.
+     */
+    handlers?: Array<string>;
+
+    /**
+     * The name of the export.
+     */
+    name?: string;
+  }
+
   /**
    * Configuration for
    * [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
@@ -445,6 +579,47 @@ export type ScriptDeleteResponse = unknown;
 
 export type ScriptGetResponse = string;
 
+export type ScriptSearchResponse = Array<ScriptSearchResponse.ScriptSearchResponseItem>;
+
+export namespace ScriptSearchResponse {
+  export interface ScriptSearchResponseItem {
+    /**
+     * When the script was created.
+     */
+    created_on: string;
+
+    /**
+     * When the script was last modified.
+     */
+    modified_on: string;
+
+    /**
+     * Name of the script, used in URLs and route configuration.
+     */
+    script_name: string;
+
+    /**
+     * Identifier.
+     */
+    script_tag: string;
+
+    /**
+     * Whether the environment is the default environment.
+     */
+    environment_is_default?: boolean;
+
+    /**
+     * Name of the environment.
+     */
+    environment_name?: string;
+
+    /**
+     * Name of the service.
+     */
+    service_name?: string;
+  }
+}
+
 export interface ScriptUpdateParams {
   /**
    * Path param: Identifier.
@@ -452,17 +627,26 @@ export interface ScriptUpdateParams {
   account_id: string;
 
   /**
-   * Body param: JSON encoded metadata about the uploaded parts and Worker
+   * Body param: JSON-encoded metadata about the uploaded parts and Worker
    * configuration.
    */
   metadata: ScriptUpdateParams.Metadata;
 
-  files?: { [key: string]: Core.Uploadable };
+  /**
+   * Body param: An array of modules (often JavaScript files) comprising a Worker
+   * script. At least one module must be present and referenced in the metadata as
+   * `main_module` or `body_part` by filename.<br/>Possible Content-Type(s) are:
+   * `application/javascript+module`, `text/javascript+module`,
+   * `application/javascript`, `text/javascript`, `text/x-python`,
+   * `text/x-python-requirement`, `application/wasm`, `text/plain`,
+   * `application/octet-stream`, `application/source-map`.
+   */
+  files?: Array<Core.Uploadable>;
 }
 
 export namespace ScriptUpdateParams {
   /**
-   * JSON encoded metadata about the uploaded parts and Worker configuration.
+   * JSON-encoded metadata about the uploaded parts and Worker configuration.
    */
   export interface Metadata {
     /**
@@ -481,9 +665,12 @@ export namespace ScriptUpdateParams {
       | Metadata.WorkersBindingKindAssets
       | Metadata.WorkersBindingKindBrowser
       | Metadata.WorkersBindingKindD1
+      | Metadata.WorkersBindingKindDataBlob
       | Metadata.WorkersBindingKindDispatchNamespace
       | Metadata.WorkersBindingKindDurableObjectNamespace
       | Metadata.WorkersBindingKindHyperdrive
+      | Metadata.WorkersBindingKindInherit
+      | Metadata.WorkersBindingKindImages
       | Metadata.WorkersBindingKindJson
       | Metadata.WorkersBindingKindKVNamespace
       | Metadata.WorkersBindingKindMTLSCertificate
@@ -492,19 +679,21 @@ export namespace ScriptUpdateParams {
       | Metadata.WorkersBindingKindQueue
       | Metadata.WorkersBindingKindR2Bucket
       | Metadata.WorkersBindingKindSecretText
+      | Metadata.WorkersBindingKindSendEmail
       | Metadata.WorkersBindingKindService
       | Metadata.WorkersBindingKindTailConsumer
+      | Metadata.WorkersBindingKindTextBlob
       | Metadata.WorkersBindingKindVectorize
       | Metadata.WorkersBindingKindVersionMetadata
       | Metadata.WorkersBindingKindSecretsStoreSecret
       | Metadata.WorkersBindingKindSecretKey
       | Metadata.WorkersBindingKindWorkflow
+      | Metadata.WorkersBindingKindWasmModule
     >;
 
     /**
-     * Name of the part in the multipart request that contains the script (e.g. the
-     * file adding a listener to the `fetch` event). Indicates a
-     * `service worker syntax` Worker.
+     * Name of the uploaded file that contains the script (e.g. the file adding a
+     * listener to the `fetch` event). Indicates a `service worker syntax` Worker.
      */
     body_part?: string;
 
@@ -533,13 +722,18 @@ export namespace ScriptUpdateParams {
     keep_bindings?: Array<string>;
 
     /**
+     * Limits to apply for this Worker.
+     */
+    limits?: Metadata.Limits;
+
+    /**
      * Whether Logpush is turned on for the Worker.
      */
     logpush?: boolean;
 
     /**
-     * Name of the part in the multipart request that contains the main module (e.g.
-     * the file exporting a `fetch` handler). Indicates a `module syntax` Worker.
+     * Name of the uploaded file that contains the main module (e.g. the file exporting
+     * a `fetch` handler). Indicates a `module syntax` Worker.
      */
     main_module?: string;
 
@@ -572,7 +766,7 @@ export namespace ScriptUpdateParams {
     /**
      * Usage model for the Worker invocations.
      */
-    usage_model?: 'standard';
+    usage_model?: 'standard' | 'bundled' | 'unbound';
   }
 
   export namespace Metadata {
@@ -706,6 +900,24 @@ export namespace ScriptUpdateParams {
       type: 'd1';
     }
 
+    export interface WorkersBindingKindDataBlob {
+      /**
+       * A JavaScript variable name for the binding.
+       */
+      name: string;
+
+      /**
+       * The name of the file containing the data content. Only accepted for
+       * `service worker syntax` Workers.
+       */
+      part: string;
+
+      /**
+       * @deprecated The kind of resource that the binding provides.
+       */
+      type: 'data_blob';
+    }
+
     export interface WorkersBindingKindDispatchNamespace {
       /**
        * A JavaScript variable name for the binding.
@@ -811,6 +1023,44 @@ export namespace ScriptUpdateParams {
        * The kind of resource that the binding provides.
        */
       type: 'hyperdrive';
+    }
+
+    export interface WorkersBindingKindInherit {
+      /**
+       * The name of the inherited binding.
+       */
+      name: string;
+
+      /**
+       * The kind of resource that the binding provides.
+       */
+      type: 'inherit';
+
+      /**
+       * The old name of the inherited binding. If set, the binding will be renamed from
+       * `old_name` to `name` in the new version. If not set, the binding will keep the
+       * same name between versions.
+       */
+      old_name?: string;
+
+      /**
+       * Identifier for the version to inherit the binding from, which can be the version
+       * ID or the literal "latest" to inherit from the latest version. Defaults to
+       * inheriting the binding from the latest version.
+       */
+      version_id?: string;
+    }
+
+    export interface WorkersBindingKindImages {
+      /**
+       * A JavaScript variable name for the binding.
+       */
+      name: string;
+
+      /**
+       * The kind of resource that the binding provides.
+       */
+      type: 'images';
     }
 
     export interface WorkersBindingKindJson {
@@ -930,6 +1180,13 @@ export namespace ScriptUpdateParams {
        * The kind of resource that the binding provides.
        */
       type: 'r2_bucket';
+
+      /**
+       * The
+       * [jurisdiction](https://developers.cloudflare.com/r2/reference/data-location/#jurisdictional-restrictions)
+       * of the R2 bucket.
+       */
+      jurisdiction?: 'eu' | 'fedramp';
     }
 
     export interface WorkersBindingKindSecretText {
@@ -949,12 +1206,34 @@ export namespace ScriptUpdateParams {
       type: 'secret_text';
     }
 
-    export interface WorkersBindingKindService {
+    export interface WorkersBindingKindSendEmail {
       /**
-       * Optional environment if the Worker utilizes one.
+       * A JavaScript variable name for the binding.
        */
-      environment: string;
+      name: string;
 
+      /**
+       * The kind of resource that the binding provides.
+       */
+      type: 'send_email';
+
+      /**
+       * List of allowed destination addresses.
+       */
+      allowed_destination_addresses?: Array<string>;
+
+      /**
+       * List of allowed sender addresses.
+       */
+      allowed_sender_addresses?: Array<string>;
+
+      /**
+       * Destination address for the email.
+       */
+      destination_address?: string;
+    }
+
+    export interface WorkersBindingKindService {
       /**
        * A JavaScript variable name for the binding.
        */
@@ -969,6 +1248,11 @@ export namespace ScriptUpdateParams {
        * The kind of resource that the binding provides.
        */
       type: 'service';
+
+      /**
+       * Optional environment if the Worker utilizes one.
+       */
+      environment?: string;
     }
 
     export interface WorkersBindingKindTailConsumer {
@@ -986,6 +1270,24 @@ export namespace ScriptUpdateParams {
        * The kind of resource that the binding provides.
        */
       type: 'tail_consumer';
+    }
+
+    export interface WorkersBindingKindTextBlob {
+      /**
+       * A JavaScript variable name for the binding.
+       */
+      name: string;
+
+      /**
+       * The name of the file containing the text content. Only accepted for
+       * `service worker syntax` Workers.
+       */
+      part: string;
+
+      /**
+       * @deprecated The kind of resource that the binding provides.
+       */
+      type: 'text_blob';
     }
 
     export interface WorkersBindingKindVectorize {
@@ -1112,6 +1414,34 @@ export namespace ScriptUpdateParams {
       script_name?: string;
     }
 
+    export interface WorkersBindingKindWasmModule {
+      /**
+       * A JavaScript variable name for the binding.
+       */
+      name: string;
+
+      /**
+       * The name of the file containing the WebAssembly module content. Only accepted
+       * for `service worker syntax` Workers.
+       */
+      part: string;
+
+      /**
+       * @deprecated The kind of resource that the binding provides.
+       */
+      type: 'wasm_module';
+    }
+
+    /**
+     * Limits to apply for this Worker.
+     */
+    export interface Limits {
+      /**
+       * The amount of CPU time this Worker can use in milliseconds.
+       */
+      cpu_ms?: number;
+    }
+
     export interface WorkersMultipleStepMigrations {
       /**
        * Tag to set as the latest migration tag.
@@ -1169,9 +1499,19 @@ export namespace ScriptUpdateParams {
         invocation_logs: boolean;
 
         /**
+         * A list of destinations where logs will be exported to.
+         */
+        destinations?: Array<string>;
+
+        /**
          * The sampling rate for logs. From 0 to 1 (1 = 100%, 0.1 = 10%). Default is 1.
          */
         head_sampling_rate?: number | null;
+
+        /**
+         * Whether log persistence is enabled for the Worker.
+         */
+        persist?: boolean;
       }
     }
 
@@ -1191,9 +1531,15 @@ export namespace ScriptUpdateParams {
 
 export interface ScriptListParams {
   /**
-   * Identifier.
+   * Path param: Identifier.
    */
   account_id: string;
+
+  /**
+   * Query param: Filter scripts by tags. Format: comma-separated list of tag:allowed
+   * pairs where allowed is 'yes' or 'no'.
+   */
+  tags?: string;
 }
 
 export interface ScriptDeleteParams {
@@ -1217,6 +1563,40 @@ export interface ScriptGetParams {
   account_id: string;
 }
 
+export interface ScriptSearchParams {
+  /**
+   * Path param: Identifier.
+   */
+  account_id: string;
+
+  /**
+   * Query param: Worker ID (also called tag) to search for. Only exact matches are
+   * returned.
+   */
+  id?: string;
+
+  /**
+   * Query param: Worker name to search for. Both exact and partial matches are
+   * returned.
+   */
+  name?: string;
+
+  /**
+   * Query param: Property to sort results by. Results are sorted in ascending order.
+   */
+  order_by?: 'created_on' | 'modified_on' | 'name';
+
+  /**
+   * Query param: Current page.
+   */
+  page?: number;
+
+  /**
+   * Query param: Items per page.
+   */
+  per_page?: number;
+}
+
 Scripts.ScriptsSinglePage = ScriptsSinglePage;
 Scripts.Assets = AssetsAPIAssets;
 Scripts.Subdomain = Subdomain;
@@ -1238,11 +1618,13 @@ export declare namespace Scripts {
     type ScriptUpdateResponse as ScriptUpdateResponse,
     type ScriptDeleteResponse as ScriptDeleteResponse,
     type ScriptGetResponse as ScriptGetResponse,
+    type ScriptSearchResponse as ScriptSearchResponse,
     ScriptsSinglePage as ScriptsSinglePage,
     type ScriptUpdateParams as ScriptUpdateParams,
     type ScriptListParams as ScriptListParams,
     type ScriptDeleteParams as ScriptDeleteParams,
     type ScriptGetParams as ScriptGetParams,
+    type ScriptSearchParams as ScriptSearchParams,
   };
 
   export { AssetsAPIAssets as Assets };
@@ -1291,9 +1673,11 @@ export declare namespace Scripts {
   export {
     Deployments as Deployments,
     type Deployment as Deployment,
-    type DeploymentCreateResponse as DeploymentCreateResponse,
-    type DeploymentGetResponse as DeploymentGetResponse,
+    type DeploymentListResponse as DeploymentListResponse,
+    type DeploymentDeleteResponse as DeploymentDeleteResponse,
     type DeploymentCreateParams as DeploymentCreateParams,
+    type DeploymentListParams as DeploymentListParams,
+    type DeploymentDeleteParams as DeploymentDeleteParams,
     type DeploymentGetParams as DeploymentGetParams,
   };
 

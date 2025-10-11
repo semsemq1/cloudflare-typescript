@@ -4,7 +4,7 @@ import { APIResource } from '../../../resource';
 import { isRequestOptions } from '../../../core';
 import * as Core from '../../../core';
 import { CloudflareError } from '../../../error';
-import { SinglePage } from '../../../pagination';
+import { V4PagePaginationArray, type V4PagePaginationArrayParams } from '../../../pagination';
 
 export class ServiceTokens extends APIResource {
   /**
@@ -108,12 +108,12 @@ export class ServiceTokens extends APIResource {
   list(
     params?: ServiceTokenListParams,
     options?: Core.RequestOptions,
-  ): Core.PagePromise<ServiceTokensSinglePage, ServiceToken>;
-  list(options?: Core.RequestOptions): Core.PagePromise<ServiceTokensSinglePage, ServiceToken>;
+  ): Core.PagePromise<ServiceTokensV4PagePaginationArray, ServiceToken>;
+  list(options?: Core.RequestOptions): Core.PagePromise<ServiceTokensV4PagePaginationArray, ServiceToken>;
   list(
     params: ServiceTokenListParams | Core.RequestOptions = {},
     options?: Core.RequestOptions,
-  ): Core.PagePromise<ServiceTokensSinglePage, ServiceToken> {
+  ): Core.PagePromise<ServiceTokensV4PagePaginationArray, ServiceToken> {
     if (isRequestOptions(params)) {
       return this.list({}, params);
     }
@@ -136,7 +136,7 @@ export class ServiceTokens extends APIResource {
         };
     return this._client.getAPIList(
       `/${accountOrZone}/${accountOrZoneId}/access/service_tokens`,
-      ServiceTokensSinglePage,
+      ServiceTokensV4PagePaginationArray,
       { query, ...options },
     );
   }
@@ -286,17 +286,17 @@ export class ServiceTokens extends APIResource {
     params: ServiceTokenRotateParams,
     options?: Core.RequestOptions,
   ): Core.APIPromise<ServiceTokenRotateResponse> {
-    const { account_id } = params;
+    const { account_id, ...body } = params;
     return (
-      this._client.post(
-        `/accounts/${account_id}/access/service_tokens/${serviceTokenId}/rotate`,
-        options,
-      ) as Core.APIPromise<{ result: ServiceTokenRotateResponse }>
+      this._client.post(`/accounts/${account_id}/access/service_tokens/${serviceTokenId}/rotate`, {
+        body,
+        ...options,
+      }) as Core.APIPromise<{ result: ServiceTokenRotateResponse }>
     )._thenUnwrap((obj) => obj.result);
   }
 }
 
-export class ServiceTokensSinglePage extends SinglePage<ServiceToken> {}
+export class ServiceTokensV4PagePaginationArray extends V4PagePaginationArray<ServiceToken> {}
 
 export interface ServiceToken {
   /**
@@ -310,8 +310,6 @@ export interface ServiceToken {
    */
   client_id?: string;
 
-  created_at?: string;
-
   /**
    * The duration for how long the service token will be valid. Must be in the format
    * `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s, m, h. The
@@ -321,14 +319,10 @@ export interface ServiceToken {
 
   expires_at?: string;
 
-  last_seen_at?: string;
-
   /**
    * The name of the service token.
    */
   name?: string;
-
-  updated_at?: string;
 }
 
 export interface ServiceTokenCreateResponse {
@@ -349,8 +343,6 @@ export interface ServiceTokenCreateResponse {
    */
   client_secret?: string;
 
-  created_at?: string;
-
   /**
    * The duration for how long the service token will be valid. Must be in the format
    * `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s, m, h. The
@@ -362,8 +354,6 @@ export interface ServiceTokenCreateResponse {
    * The name of the service token.
    */
   name?: string;
-
-  updated_at?: string;
 }
 
 export interface ServiceTokenRotateResponse {
@@ -384,8 +374,6 @@ export interface ServiceTokenRotateResponse {
    */
   client_secret?: string;
 
-  created_at?: string;
-
   /**
    * The duration for how long the service token will be valid. Must be in the format
    * `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s, m, h. The
@@ -397,8 +385,6 @@ export interface ServiceTokenRotateResponse {
    * The name of the service token.
    */
   name?: string;
-
-  updated_at?: string;
 }
 
 export interface ServiceTokenCreateParams {
@@ -420,11 +406,28 @@ export interface ServiceTokenCreateParams {
   zone_id?: string;
 
   /**
+   * Body param: A version number identifying the current `client_secret` associated
+   * with the service token. Incrementing it triggers a rotation; the previous secret
+   * will still be accepted until the time indicated by
+   * `previous_client_secret_expires_at`.
+   */
+  client_secret_version?: number;
+
+  /**
    * Body param: The duration for how long the service token will be valid. Must be
    * in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
    * m, h. The default is 1 year in hours (8760h).
    */
   duration?: string;
+
+  /**
+   * Body param: The expiration of the previous `client_secret`. This can be modified
+   * at any point after a rotation. For example, you may extend it further into the
+   * future if you need more time to update services with the new secret; or move it
+   * into the past to immediately invalidate the previous token in case of
+   * compromise.
+   */
+  previous_client_secret_expires_at?: string;
 }
 
 export interface ServiceTokenUpdateParams {
@@ -441,6 +444,14 @@ export interface ServiceTokenUpdateParams {
   zone_id?: string;
 
   /**
+   * Body param: A version number identifying the current `client_secret` associated
+   * with the service token. Incrementing it triggers a rotation; the previous secret
+   * will still be accepted until the time indicated by
+   * `previous_client_secret_expires_at`.
+   */
+  client_secret_version?: number;
+
+  /**
    * Body param: The duration for how long the service token will be valid. Must be
    * in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
    * m, h. The default is 1 year in hours (8760h).
@@ -451,9 +462,18 @@ export interface ServiceTokenUpdateParams {
    * Body param: The name of the service token.
    */
   name?: string;
+
+  /**
+   * Body param: The expiration of the previous `client_secret`. This can be modified
+   * at any point after a rotation. For example, you may extend it further into the
+   * future if you need more time to update services with the new secret; or move it
+   * into the past to immediately invalidate the previous token in case of
+   * compromise.
+   */
+  previous_client_secret_expires_at?: string;
 }
 
-export interface ServiceTokenListParams {
+export interface ServiceTokenListParams extends V4PagePaginationArrayParams {
   /**
    * Path param: The Account ID to use for this endpoint. Mutually exclusive with the
    * Zone ID.
@@ -510,19 +530,26 @@ export interface ServiceTokenRefreshParams {
 
 export interface ServiceTokenRotateParams {
   /**
-   * Identifier.
+   * Path param: Identifier.
    */
   account_id: string;
+
+  /**
+   * Body param: The expiration of the previous `client_secret`. If not provided, it
+   * defaults to the current timestamp in order to immediately expire the previous
+   * secret.
+   */
+  previous_client_secret_expires_at?: string;
 }
 
-ServiceTokens.ServiceTokensSinglePage = ServiceTokensSinglePage;
+ServiceTokens.ServiceTokensV4PagePaginationArray = ServiceTokensV4PagePaginationArray;
 
 export declare namespace ServiceTokens {
   export {
     type ServiceToken as ServiceToken,
     type ServiceTokenCreateResponse as ServiceTokenCreateResponse,
     type ServiceTokenRotateResponse as ServiceTokenRotateResponse,
-    ServiceTokensSinglePage as ServiceTokensSinglePage,
+    ServiceTokensV4PagePaginationArray as ServiceTokensV4PagePaginationArray,
     type ServiceTokenCreateParams as ServiceTokenCreateParams,
     type ServiceTokenUpdateParams as ServiceTokenUpdateParams,
     type ServiceTokenListParams as ServiceTokenListParams,
